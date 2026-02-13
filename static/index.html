@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Recruiter AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-6 font-sans">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full border border-slate-200">
+        <h1 class="text-3xl font-extrabold text-slate-800 mb-2">GitHub Portfolio Analyzer</h1>
+        <p class="text-slate-500 mb-8">See your profile exactly how technical recruiters do.</p>
+        
+        <div class="flex gap-4 mb-8">
+            <input type="text" id="username" placeholder="Enter GitHub Username..." class="flex-1 border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+            <button onclick="analyze()" id="btn" class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md">Analyze</button>
+        </div>
+
+        <div id="loading" class="hidden text-center text-indigo-600 py-8 font-medium animate-pulse">
+            Fetching repository signals and generating recruiter insights...
+        </div>
+        
+        <div id="results" class="hidden space-y-6">
+            <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-100 text-center shadow-sm">
+                <h2 class="text-sm font-bold text-indigo-800 uppercase tracking-wider">Recruiter Readiness Score</h2>
+                <div id="score" class="text-6xl font-black text-indigo-600 mt-2">--/100</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-100 shadow-sm">
+                    <h3 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">🟢 Strong Signals</h3>
+                    <ul id="strengths" class="list-disc list-inside text-emerald-700 text-sm space-y-2"></ul>
+                </div>
+                <div class="bg-rose-50 p-5 rounded-xl border border-rose-100 shadow-sm">
+                    <h3 class="font-bold text-rose-800 mb-3 flex items-center gap-2">🚩 Red Flags</h3>
+                    <ul id="red-flags" class="list-disc list-inside text-rose-700 text-sm space-y-2"></ul>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm mt-6">
+                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">⚡ Actionable Next Steps</h3>
+                <ul id="steps" class="list-disc list-inside text-slate-700 text-sm space-y-2 font-medium"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const username = document.getElementById('username').value;
+            if(!username) return;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('btn').disabled = true;
+
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username})
+                });
+                
+                const data = await res.json();
+                
+                if(!res.ok) {
+                    alert(data.detail || "Something went wrong!");
+                    return;
+                }
+
+                document.getElementById('score').innerText = `${data.score}/100`;
+                document.getElementById('strengths').innerHTML = data.strengths.map(s => `<li>${s}</li>`).join('');
+                document.getElementById('red-flags').innerHTML = data.red_flags.map(s => `<li>${s}</li>`).join('');
+                document.getElementById('steps').innerHTML = data.actionable_steps.map(s => `<li>${s}</li>`).join('');
+                
+                document.getElementById('results').classList.remove('hidden');
+            } catch (e) {
+                alert("Error connecting to backend API.");
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('btn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
