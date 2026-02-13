@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Recruiter AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-6 font-sans">
-    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full border border-slate-200">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full border border-slate-200" id="app-container">
         <h1 class="text-3xl font-extrabold text-slate-800 mb-2">GitHub Portfolio Analyzer</h1>
         <p class="text-slate-500 mb-8">See your profile exactly how technical recruiters do.</p>
         
-        <div class="flex gap-4 mb-8">
+        <div class="flex gap-4 mb-8" id="search-section">
             <input type="text" id="username" placeholder="Enter GitHub Username..." class="flex-1 border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
             <button onclick="analyze()" id="btn" class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md">Analyze</button>
         </div>
@@ -20,26 +21,34 @@
             Fetching repository signals and generating recruiter insights...
         </div>
         
-        <div id="results" class="hidden space-y-6">
-            <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-100 text-center shadow-sm">
-                <h2 class="text-sm font-bold text-indigo-800 uppercase tracking-wider">Recruiter Readiness Score</h2>
-                <div id="score" class="text-6xl font-black text-indigo-600 mt-2">--/100</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-100 shadow-sm">
-                    <h3 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">🟢 Strong Signals</h3>
-                    <ul id="strengths" class="list-disc list-inside text-emerald-700 text-sm space-y-2"></ul>
+        <div id="report-content">
+            <div id="results" class="hidden space-y-6">
+                <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-100 text-center shadow-sm">
+                    <h2 class="text-sm font-bold text-indigo-800 uppercase tracking-wider">Recruiter Readiness Score</h2>
+                    <div id="score" class="text-6xl font-black text-indigo-600 mt-2">--/100</div>
                 </div>
-                <div class="bg-rose-50 p-5 rounded-xl border border-rose-100 shadow-sm">
-                    <h3 class="font-bold text-rose-800 mb-3 flex items-center gap-2">🚩 Red Flags</h3>
-                    <ul id="red-flags" class="list-disc list-inside text-rose-700 text-sm space-y-2"></ul>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-100 shadow-sm">
+                        <h3 class="font-bold text-emerald-800 mb-3 flex items-center gap-2">🟢 Strong Signals</h3>
+                        <ul id="strengths" class="list-disc list-inside text-emerald-700 text-sm space-y-2"></ul>
+                    </div>
+                    <div class="bg-rose-50 p-5 rounded-xl border border-rose-100 shadow-sm">
+                        <h3 class="font-bold text-rose-800 mb-3 flex items-center gap-2">🚩 Red Flags</h3>
+                        <ul id="red-flags" class="list-disc list-inside text-rose-700 text-sm space-y-2"></ul>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm mt-6">
-                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">⚡ Actionable Next Steps</h3>
-                <ul id="steps" class="list-disc list-inside text-slate-700 text-sm space-y-2 font-medium"></ul>
+                
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm mt-6">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">⚡ Actionable Next Steps</h3>
+                    <ul id="steps" class="list-disc list-inside text-slate-700 text-sm space-y-2 font-medium"></ul>
+                </div>
+
+                <div class="mt-8 text-center" id="download-section">
+                    <button onclick="downloadPDF()" class="bg-slate-800 text-white px-6 py-3 rounded-lg hover:bg-slate-900 transition font-semibold shadow-md inline-flex items-center gap-2">
+                        📄 Download Recruiter Report
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -79,6 +88,29 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('btn').disabled = false;
             }
+        }
+
+        // ADDED: The PDF Generation Logic
+        function downloadPDF() {
+            const username = document.getElementById('username').value;
+            const element = document.getElementById('report-content');
+            const downloadBtn = document.getElementById('download-section');
+            
+            // Hide the download button so it doesn't show up IN the PDF
+            downloadBtn.style.display = 'none';
+
+            const opt = {
+                margin:       0.5,
+                filename:     `${username}_Recruiter_Report.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Generate PDF, then show the button again
+            html2pdf().set(opt).from(element).save().then(() => {
+                downloadBtn.style.display = 'block';
+            });
         }
     </script>
 </body>
